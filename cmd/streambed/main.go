@@ -47,7 +47,7 @@ func main() {
 
 	cfg := config.Load()
 	syncCmd.Flags().StringVar(&cfg.SourceURL, "source-url", cfg.SourceURL, "Postgres connection URL")
-	syncCmd.Flags().StringVar(&cfg.PrimaryURL, "primary-url", cfg.PrimaryURL, "Postgres primary URL for write setup ops (publication, slot). Defaults to --source-url. Set when --source-url is a replica.")
+	syncCmd.Flags().StringVar(&cfg.PrimaryURL, "primary-url", cfg.PrimaryURL, "Postgres primary URL for publication setup and metadata queries. Defaults to --source-url. Set when --source-url is a replica.")
 	syncCmd.Flags().StringVar(&cfg.S3Bucket, "s3-bucket", cfg.S3Bucket, "S3 bucket name")
 	syncCmd.Flags().StringVar(&cfg.S3Prefix, "s3-prefix", cfg.S3Prefix, "S3 key prefix")
 	syncCmd.Flags().StringVar(&cfg.S3Endpoint, "s3-endpoint", cfg.S3Endpoint, "Custom S3 endpoint (MinIO)")
@@ -391,7 +391,7 @@ func runSync(cmd *cobra.Command, args []string) error {
 	defer pgConn.Close(context.Background())
 
 	// Open a replication connection to the PRIMARY for setup operations
-	// (CREATE PUBLICATION, CREATE_REPLICATION_SLOT). When --primary-url is
+	// (CREATE PUBLICATION). When --primary-url is
 	// not set this is the same server as pgConn.
 	primaryURL := cfg.EffectivePrimaryURL()
 	primaryReplStr := primaryURL
@@ -553,9 +553,9 @@ func runSync(cmd *cobra.Command, args []string) error {
 			tableFlushLSN[fmt.Sprintf("%s.%s", t.Schema, t.Table)] = lsn
 		}
 
-		// Recompute startLSN from the primary's slot state to ensure the slot exists
-		// (if it was dropped, we must recreate it on the primary).
-		slotLSN, err = wal.CreateOrReuseSlot(ctx, setupConn, cfg.SlotName, logger)
+		// Recompute startLSN from the source's slot state to ensure the slot exists
+		// (if it was dropped, we must recreate it on the source).
+		slotLSN, err = wal.CreateOrReuseSlot(ctx, pgConn, cfg.SlotName, logger)
 		if err != nil {
 			logger.Error("reconnect: slot setup failed", "error", err)
 			continue

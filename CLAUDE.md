@@ -20,7 +20,7 @@ docker compose up
   --query-addr=:5433
 
 # Run against a hot-standby replica (Postgres 16+)
-# --primary-url is used only for CREATE PUBLICATION / CREATE_REPLICATION_SLOT
+# --primary-url is used only for publication setup and metadata queries
 ./streambed sync \
   --source-url="postgres://postgres:test@replica-host:5432/postgres" \
   --primary-url="postgres://postgres:test@primary-host:5432/postgres" \

@@ -11,9 +11,8 @@ import (
 type Config struct {
 	SourceURL            string
 	// PrimaryURL, if set, is used for write operations (CREATE PUBLICATION,
-	// CREATE_REPLICATION_SLOT, metadata queries). Useful when --source-url
-	// points at a read-only hot-standby replica. Falls back to SourceURL
-	// when empty.
+	// metadata queries). Useful when --source-url points at a read-only
+	// hot-standby replica. Falls back to SourceURL when empty.
 	PrimaryURL           string
 	S3Bucket             string
 	S3Prefix             string
